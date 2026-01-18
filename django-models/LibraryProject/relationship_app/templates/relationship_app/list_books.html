@@ -4,13 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <title>List of Books</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
     <h1>Books Available:</h1>
+
+    {% if perms.relationship_app.can_add_book %}
+    <a href="{% url 'add_book' %}">Add New Book</a>
+    {% endif %}
+
     <ul>
         {% for book in books %}
-        <li>{{ book.title }} by {{ book.author.name }}</li>
+        <li>
+            {{ book.title }} by {{ book.author.name }}
+            {% if perms.relationship_app.can_change_book %}
+            <a href="{% url 'edit_book' book.pk %}">Edit</a>
+            {% endif %}
+            {% if perms.relationship_app.can_delete_book %}
+            <a href="{% url 'delete_book' book.pk %}">Delete</a>
+            {% endif %}
+        </li>
         {% endfor %}
     </ul>
+
+    <a href="{% url 'logout' %}">Logout</a>
 </body>
 </html>
