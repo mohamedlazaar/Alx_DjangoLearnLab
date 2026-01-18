@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Member Dashboard</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <h1>Member Dashboard</h1>
+    <p>Welcome, Library Member! Browse and borrow books from our collection.</p>
+    <div>
+        <h2>Member Capabilities:</h2>
+        <ul>
+            <li>Browse available books</li>
+            <li>View book details and availability</li>
+            <li>Borrow and return books</li>
+            <li>View your borrowing history</li>
+            <li>Reserve books</li>
+        </ul>
+    </div>
+    <a href="{% url 'books' %}">Browse Books</a> |
+    <a href="{% url 'logout' %}">Logout</a>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Librarian Dashboard</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <h1>Librarian Dashboard</h1>
+    <p>Welcome, Librarian! You can manage books and library operations.</p>
+    <div>
+        <h2>Librarian Capabilities:</h2>
+        <ul>
+            <li>Add and edit book information</li>
+            <li>Manage book inventory</li>
+            <li>Process book loans and returns</li>
+            <li>View library statistics</li>
+            <li>Assist library members</li>
+        </ul>
+    </div>
+    <a href="{% url 'books' %}">View All Books</a> |
+    <a href="{% url 'logout' %}">Logout</a>
+</body>
+</html>
