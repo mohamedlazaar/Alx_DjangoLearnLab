@@ -2,22 +2,22 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
-# from .forms import ExampleForm
+from .forms import ExampleForm
 from django.http import HttpResponse
 from django.shortcuts import render
 
 
-# def form_example(request):
-#     form = ExampleForm()
-#     return render(request, "bookshelf/form_example.html", {"form": form})
+def form_example(request):
+    form = ExampleForm()
+    return render(request, "bookshelf/form_example.html", {"form": form})
 
 
 
-# @csrf_protect
-# def secure_view(request):
-#     response = HttpResponse("Secure content")
-#     response["Content-Security-Policy"] = "default-src 'self'"
-#     return response
+@csrf_protect
+def secure_view(request):
+    response = HttpResponse("Secure content")
+    response["Content-Security-Policy"] = "default-src 'self'"
+    return response
 
 # Permission-based book views
 

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Book List</h2>
+
+<ul>
+    {% for book in books %}
+        <li>{{ book.title }}</li>
+    {% empty %}
+        <li>No books available</li>
+    {% endfor %}
+</ul>
+
+</body>
+</html>
