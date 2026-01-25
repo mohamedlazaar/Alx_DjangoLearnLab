@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if action %}Edit{% else %}Add{% endif %} Book</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <h1>{% if action %}{{ action }}{% else %}Add{% endif %} Book</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{{ action|default:"Add" }} Book</button>
+    </form>
+    <a href="{% url 'list_books' %}">Back to Books</a>
+</body>
+</html>
