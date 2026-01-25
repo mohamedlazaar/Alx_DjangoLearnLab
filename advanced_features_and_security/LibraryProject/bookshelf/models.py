@@ -41,7 +41,13 @@ class Book(models.Model):
     # def __str__(self):
     #     return f"{self.title} by {self.author} published in {self.publication_year}"
 
-    # class Meta:
-    #     ordering = ['-publication_year']
-    #     verbose_name_plural = 'Books'
+    class Meta:
+        ordering = ['-publication_year']
+        verbose_name_plural = 'Books'
+        permissions = [
+            ("can_view", "Can view book"),
+            ("can_create", "Can create book"),
+            ("can_edit", "Can edit book"),
+            ("can_delete", "Can delete book"),
+        ]
         
