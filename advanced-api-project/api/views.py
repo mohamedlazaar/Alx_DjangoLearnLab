@@ -3,8 +3,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from .models import Book, Author
+from django_filters import rest_framework  # pyright: ignore[reportMissingImports]
+from .models import Book
 from .serializers import BookSerializer
 
 """
@@ -42,7 +42,7 @@ class ListView(generics.ListAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     # Filtering, searching and ordering
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [rest_framework.DjangoFilterBackend, SearchFilter, OrderingFilter]
     # Allow filtering by exact fields (author expects author id)
     filterset_fields = ["title", "author", "publication_year"]
     # Enable text search on title and related author's name
