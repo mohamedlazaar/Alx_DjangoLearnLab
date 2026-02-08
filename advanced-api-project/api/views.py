@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Book, Author
 from .serializers import BookSerializer
 
@@ -36,7 +38,19 @@ class ListView(generics.ListAPIView):
     """
     queryset = Book.objects.all().select_related('author')
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]
+    # Allow anonymous read-only access, authenticated users can write
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    # Filtering, searching and ordering
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    # Allow filtering by exact fields (author expects author id)
+    filterset_fields = ["title", "author", "publication_year"]
+    # Enable text search on title and related author's name
+    search_fields = ["title", "author__name"]
+    # Allow ordering by these fields (use - to reverse)
+    ordering_fields = ["title", "publication_year", "author__name"]
+    # Default ordering
+    ordering = ["title"]
 
 
 class DetailView(generics.RetrieveAPIView):

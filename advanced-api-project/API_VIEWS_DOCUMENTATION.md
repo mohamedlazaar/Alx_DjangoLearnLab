@@ -123,6 +123,42 @@ GET /api/books/
 
 ---
 
+### Filtering, Searching, and Ordering
+
+The `ListView` supports advanced query capabilities using Django REST Framework's filter backends. The following query params are supported:
+
+- **Filtering (exact matches)**: Use the field name as a query parameter.
+  - `?title=The Hobbit` filters books with title exactly "The Hobbit".
+  - `?author=1` filters books by author id `1`.
+  - `?publication_year=1937` filters books published in 1937.
+
+- **Search (text search)**: Use the `search` parameter to perform text searches on configured fields.
+  - `?search=Hobbit` will match titles or author names containing "Hobbit" (case-insensitive).
+
+- **Ordering (sorting)**: Use the `ordering` parameter to sort results.
+  - `?ordering=publication_year` sorts ascending by publication year.
+  - `?ordering=-publication_year` sorts descending by publication year.
+  - `?ordering=title` sorts by title.
+
+Examples:
+
+```bash
+# Filter by author id and order by newest publication year
+GET /api/books/?author=1&ordering=-publication_year
+
+# Search across title and author name
+GET /api/books/?search=Orwell
+
+# Combine search, filter and ordering
+GET /api/books/?search=Hobbit&publication_year=1937&ordering=title
+```
+
+Notes:
+- The `author` filter expects the author's primary key (ID). To filter by author name use the `search` parameter (e.g., `?search=Fitzgerald`).
+- Pagination (if enabled in `settings.py`) will still apply to filtered/search results.
+
+---
+
 ### 2. DetailView - Retrieve Single Book
 
 **Configuration:**
