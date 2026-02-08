@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from rest_framework import generics, permissions, status
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from .models import Book, Author
-from .serializers import BookSerializer, AuthorSerializer
+from .serializers import BookSerializer
 
 """
 API Views for Book Management
