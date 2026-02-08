@@ -125,6 +125,19 @@ class BookCreateTests(BookAPITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_create_authenticated_with_login_returns_201(self):
+        """Authenticated user via self.client.login (test DB) can create a book."""
+        self.client.login(username='testuser', password='testpass123')
+        url = reverse('book-create')
+        data = {
+            'title': 'Book Via Login',
+            'publication_year': 2023,
+            'author': self.author1.pk,
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Book.objects.filter(title='Book Via Login').exists())
+
     def test_create_authenticated_returns_201_and_saves(self):
         """Authenticated user can create a book; data is saved and returned."""
         self.client.force_authenticate(user=self.user)
