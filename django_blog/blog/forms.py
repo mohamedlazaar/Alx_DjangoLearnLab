@@ -26,6 +26,7 @@ class PostForm(forms.ModelForm):
     Fields: title, content, tags (comma-separated). Author is set in the view.
     New tag names are created if they do not exist.
     """
+    # Tag input: comma-separated text; optional TagWidget() from taggit for richer UX
     tags_input = forms.CharField(
         required=False,
         label="Tags",
