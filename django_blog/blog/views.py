@@ -90,6 +90,26 @@ def posts_by_tag(request, tag_slug):
     return render(request, "blog/post_list.html", {"posts": posts, "tag": tag})
 
 
+class PostByTagListView(ListView):
+    """Display all posts that have the given tag (by slug)."""
+    context_object_name = "posts"
+    template_name = "blog/post_list.html"
+    ordering = ["-published_date"]
+
+    def get_queryset(self):
+        self.tag = get_object_or_404(Tag, slug=self.kwargs["tag_slug"])
+        return (
+            Post.objects.filter(tags=self.tag)
+            .select_related("author")
+            .prefetch_related("tags")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tag"] = self.tag
+        return context
+
+
 class PostCreateView(LoginRequiredMixin, CreateView):
     """Create a new post. Only authenticated users."""
     model = Post
