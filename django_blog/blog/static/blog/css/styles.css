@@ -144,3 +144,16 @@ header nav a + a {
 .comment-form-wrap h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
 .comment-form textarea { max-width: 100%; min-height: 80px; }
 .comment-preview { margin: 1rem 0; padding: 1rem; background: #f9f9f9; border-radius: 6px; }
+
+/* Search and tags */
+.search-form { display: inline-flex; gap: 0.5rem; margin-left: 1rem; align-items: center; }
+.search-form input[type="search"] { padding: 0.35rem 0.5rem; width: 160px; border: 1px solid #ccc; border-radius: 4px; }
+.search-form button { padding: 0.35rem 0.75rem; background: #34495e; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+.search-form-inline { margin: 1rem 0; display: flex; gap: 0.5rem; max-width: 400px; }
+.search-form-inline input { flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+.search-form-inline button { padding: 0.5rem 1rem; background: #2c3e50; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+.search-meta { color: #666; margin-bottom: 1rem; }
+.no-results { color: #666; }
+.post-tags { margin: 0.25rem 0; font-size: 0.9rem; }
+.post-tags .tag { display: inline-block; margin-right: 0.25rem; padding: 0.2rem 0.5rem; background: #ecf0f1; color: #2c3e50; border-radius: 4px; text-decoration: none; }
+.post-tags .tag:hover { background: #bdc3c7; }

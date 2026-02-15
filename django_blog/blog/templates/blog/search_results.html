@@ -1,0 +1,35 @@
+{% extends "blog/base.html" %}
+{% block title %}Search{% if query %}: {{ query }}{% endif %} - Django Blog{% endblock %}
+{% block content %}
+<h1>Search</h1>
+<form class="search-form-inline" action="{% url 'blog:search' %}" method="get" role="search">
+  <input type="search" name="q" placeholder="Search by title, content, or tag..." value="{{ query }}">
+  <button type="submit">Search</button>
+</form>
+{% if query %}
+  {% if posts %}
+    <p class="search-meta">{{ posts|length }} result{{ posts|length|pluralize }} for "{{ query }}"</p>
+    <ul class="post-list">
+      {% for post in posts %}
+      <li>
+        <h2><a href="{% url 'blog:post_detail' post.pk %}">{{ post.title }}</a></h2>
+        <p class="meta">By {{ post.author.username }} on {{ post.published_date|date:"F j, Y" }}</p>
+        {% if post.tags.exists %}
+          <p class="post-tags">
+            {% for tag in post.tags.all %}
+              <a href="{% url 'blog:posts_by_tag' tag.slug %}" class="tag">{{ tag.name }}</a>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          </p>
+        {% endif %}
+        <p>{{ post.content|truncatewords:30 }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="no-results">No posts found for "{{ query }}". Try different keywords or tags.</p>
+  {% endif %}
+{% else %}
+  <p>Enter a search term above to find posts by title, content, or tag.</p>
+{% endif %}
+<p><a href="{% url 'blog:post_list' %}">&larr; Back to posts</a></p>
+{% endblock %}

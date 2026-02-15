@@ -13,13 +13,20 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from django.db.models import Q
+
 from .forms import CommentForm, CustomUserCreationForm, PostForm, UserProfileForm
-from .models import Comment, Post, UserProfile
+from .models import Comment, Post, Tag, UserProfile
 
 
 def home(request):
     """Home page: list of posts (or placeholder)."""
-    posts = Post.objects.all().select_related("author").order_by("-published_date")[:10]
+    posts = (
+        Post.objects.all()
+        .select_related("author")
+        .prefetch_related("tags")
+        .order_by("-published_date")[:10]
+    )
     return render(request, "blog/home.html", {"posts": posts})
 
 
@@ -35,7 +42,7 @@ class PostListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return super().get_queryset().select_related("author")
+        return super().get_queryset().select_related("author").prefetch_related("tags")
 
 
 class PostDetailView(DetailView):
@@ -45,13 +52,42 @@ class PostDetailView(DetailView):
     template_name = "blog/post_detail.html"
 
     def get_queryset(self):
-        return super().get_queryset().select_related("author")
+        return super().get_queryset().select_related("author").prefetch_related("tags")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["comments"] = self.object.comments.select_related("author").all()
         context["comment_form"] = CommentForm()
         return context
+
+
+def search_posts(request):
+    """Search posts by title, content, or tag name. Uses Q objects for OR lookups."""
+    q = (request.GET.get("q") or "").strip()
+    posts = []
+    if q:
+        posts = (
+            Post.objects.filter(
+                Q(title__icontains=q) | Q(content__icontains=q) | Q(tags__name__icontains=q)
+            )
+            .select_related("author")
+            .prefetch_related("tags")
+            .distinct()
+            .order_by("-published_date")
+        )
+    return render(request, "blog/search_results.html", {"query": q, "posts": posts})
+
+
+def posts_by_tag(request, tag_slug):
+    """List posts that have the given tag (by slug)."""
+    tag = get_object_or_404(Tag, slug=tag_slug)
+    posts = (
+        Post.objects.filter(tags=tag)
+        .select_related("author")
+        .prefetch_related("tags")
+        .order_by("-published_date")
+    )
+    return render(request, "blog/post_list.html", {"posts": posts, "tag": tag})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):

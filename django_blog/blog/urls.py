@@ -19,6 +19,10 @@ Comments:
 - /posts/<post_id>/comments/new/           - create comment (authenticated)
 - /posts/<post_id>/comments/<comment_pk>/edit/   - edit comment (author only)
 - /posts/<post_id>/comments/<comment_pk>/delete/  - delete comment (author only)
+
+Search and tags:
+- /search/             - search posts (GET q=)
+- /tags/<tag_slug>/    - posts by tag
 """
 from django.urls import path
 
@@ -49,4 +53,7 @@ urlpatterns = [
     path("comment/<int:pk>/update/", views.CommentUpdateView.as_view(), name="comment_update_alt"),
     path("posts/<int:post_id>/comments/<int:comment_pk>/delete/", views.CommentDeleteView.as_view(), name="comment_delete"),
     path("comment/<int:pk>/delete/", views.CommentDeleteView.as_view(), name="comment_delete_alt"),
+    # Search and tags
+    path("search/", views.search_posts, name="search"),
+    path("tags/<slug:tag_slug>/", views.posts_by_tag, name="posts_by_tag"),
 ]

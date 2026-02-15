@@ -5,7 +5,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Comment, Post, UserProfile
+from .models import Comment, Post, Tag, UserProfile
 
 
 class CommentForm(forms.ModelForm):
@@ -23,8 +23,15 @@ class CommentForm(forms.ModelForm):
 class PostForm(forms.ModelForm):
     """
     ModelForm for creating and updating blog posts.
-    Fields: title, content. Author is set in the view from request.user.
+    Fields: title, content, tags (comma-separated). Author is set in the view.
+    New tag names are created if they do not exist.
     """
+    tags_input = forms.CharField(
+        required=False,
+        label="Tags",
+        help_text="Comma-separated (e.g. python, django, tutorial). New tags are created as needed.",
+        widget=forms.TextInput(attrs={"placeholder": "python, django, tutorial"}),
+    )
 
     class Meta:
         model = Post
@@ -33,6 +40,29 @@ class PostForm(forms.ModelForm):
             "title": forms.TextInput(attrs={"placeholder": "Post title"}),
             "content": forms.Textarea(attrs={"rows": 12, "placeholder": "Write your post content here..."}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["tags_input"].initial = ", ".join(t.name for t in self.instance.tags.all())
+
+    def save(self, commit=True):
+        post = super().save(commit=commit)
+        if commit:
+            self._save_tags(post)
+        return post
+
+    def _save_tags(self, post):
+        raw = (self.cleaned_data.get("tags_input") or "").strip()
+        if not raw:
+            post.tags.clear()
+            return
+        names = [n.strip() for n in raw.split(",") if n.strip()]
+        tag_objs = []
+        for name in names:
+            tag, _ = Tag.objects.get_or_create(name=name)
+            tag_objs.append(tag)
+        post.tags.set(tag_objs)
 
 
 class CustomUserCreationForm(UserCreationForm):
