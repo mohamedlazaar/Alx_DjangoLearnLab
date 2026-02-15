@@ -111,7 +111,8 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     login_url = "blog:login"
 
     def dispatch(self, request, *args, **kwargs):
-        self.post_obj = get_object_or_404(Post, pk=kwargs["post_id"])
+        post_id = kwargs.get("post_id") or kwargs.get("pk")
+        self.post_obj = get_object_or_404(Post, pk=post_id)
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -136,6 +137,10 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     login_url = "blog:login"
     pk_url_kwarg = "comment_pk"
 
+    def get_object(self, queryset=None):
+        pk = self.kwargs.get("comment_pk") or self.kwargs.get("pk")
+        return get_object_or_404(Comment, pk=pk)
+
     def test_func(self):
         return self.get_object().author == self.request.user
 
@@ -154,6 +159,10 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = "blog/comment_confirm_delete.html"
     login_url = "blog:login"
     pk_url_kwarg = "comment_pk"
+
+    def get_object(self, queryset=None):
+        pk = self.kwargs.get("comment_pk") or self.kwargs.get("pk")
+        return get_object_or_404(Comment, pk=pk)
 
     def test_func(self):
         return self.get_object().author == self.request.user
