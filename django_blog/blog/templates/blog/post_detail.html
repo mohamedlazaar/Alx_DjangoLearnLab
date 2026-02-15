@@ -12,5 +12,37 @@
     </p>
   {% endif %}
 </article>
+
+<section class="comments-section">
+  <h2>Comments ({{ comments|length }})</h2>
+  {% for comment in comments %}
+  <div class="comment">
+    <p class="comment-meta">{{ comment.author.username }} &middot; {{ comment.created_at|date:"F j, Y, g:i a" }}{% if comment.updated_at != comment.created_at %} (edited){% endif %}</p>
+    <p class="comment-content">{{ comment.content|linebreaks }}</p>
+    {% if user.is_authenticated and user == comment.author %}
+      <p class="comment-actions">
+        <a href="{% url 'blog:comment_update' post.pk comment.pk %}">Edit</a>
+        <a href="{% url 'blog:comment_delete' post.pk comment.pk %}" class="comment-delete">Delete</a>
+      </p>
+    {% endif %}
+  </div>
+  {% empty %}
+  <p class="no-comments">No comments yet.</p>
+  {% endfor %}
+
+  {% if user.is_authenticated %}
+  <div class="comment-form-wrap">
+    <h3>Add a comment</h3>
+    <form method="post" action="{% url 'blog:comment_create' post.pk %}" class="auth-form comment-form">
+      {% csrf_token %}
+      {{ comment_form.as_p }}
+      <button type="submit">Post comment</button>
+    </form>
+  </div>
+  {% else %}
+  <p><a href="{% url 'blog:login' %}">Log in</a> to leave a comment.</p>
+  {% endif %}
+</section>
+
 <p><a href="{% url 'blog:post_list' %}">&larr; Back to posts</a></p>
 {% endblock %}

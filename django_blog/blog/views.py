@@ -9,12 +9,12 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import CustomUserCreationForm, PostForm, UserProfileForm
-from .models import Post, UserProfile
+from .forms import CommentForm, CustomUserCreationForm, PostForm, UserProfileForm
+from .models import Comment, Post, UserProfile
 
 
 def home(request):
@@ -39,13 +39,19 @@ class PostListView(ListView):
 
 
 class PostDetailView(DetailView):
-    """Display a single blog post. Accessible to everyone."""
+    """Display a single blog post and its comments. Accessible to everyone."""
     model = Post
     context_object_name = "post"
     template_name = "blog/post_detail.html"
 
     def get_queryset(self):
         return super().get_queryset().select_related("author")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["comments"] = self.object.comments.select_related("author").all()
+        context["comment_form"] = CommentForm()
+        return context
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -92,6 +98,71 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, "Post deleted successfully.")
+        return super().delete(request, *args, **kwargs)
+
+
+# --- Comment views ---
+
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    """Create a comment on a post. Authenticated only; redirects back to post detail."""
+    model = Comment
+    form_class = CommentForm
+    login_url = "blog:login"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.post_obj = get_object_or_404(Post, pk=kwargs["post_id"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        return redirect("blog:post_detail", pk=self.post_obj.pk)
+
+    def form_valid(self, form):
+        form.instance.post = self.post_obj
+        form.instance.author = self.request.user
+        messages.success(self.request, "Comment added.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("blog:post_detail", kwargs={"pk": self.post_obj.pk})
+
+
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Edit a comment. Only the comment author can edit."""
+    model = Comment
+    form_class = CommentForm
+    context_object_name = "comment"
+    template_name = "blog/comment_form.html"
+    login_url = "blog:login"
+    pk_url_kwarg = "comment_pk"
+
+    def test_func(self):
+        return self.get_object().author == self.request.user
+
+    def get_success_url(self):
+        return reverse("blog:post_detail", kwargs={"pk": self.get_object().post_id})
+
+    def form_valid(self, form):
+        messages.success(self.request, "Comment updated.")
+        return super().form_valid(form)
+
+
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Delete a comment. Only the comment author can delete."""
+    model = Comment
+    context_object_name = "comment"
+    template_name = "blog/comment_confirm_delete.html"
+    login_url = "blog:login"
+    pk_url_kwarg = "comment_pk"
+
+    def test_func(self):
+        return self.get_object().author == self.request.user
+
+    def get_success_url(self):
+        return reverse("blog:post_detail", kwargs={"pk": self.get_object().post_id})
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Comment deleted.")
         return super().delete(request, *args, **kwargs)
 
 

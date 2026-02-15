@@ -16,6 +16,21 @@ class Post(models.Model):
         return self.title
 
 
+class Comment(models.Model):
+    """Comment on a blog post. Many-to-one with Post and User (author)."""
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on {self.post_id}"
+
+    class Meta:
+        ordering = ["created_at"]
+
+
 class UserProfile(models.Model):
     """Extended profile for users: bio and optional profile picture."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')

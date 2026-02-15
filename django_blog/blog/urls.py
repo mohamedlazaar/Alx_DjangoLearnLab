@@ -14,6 +14,11 @@ Post CRUD:
 - /posts/<pk>/          - post detail
 - /posts/<pk>/edit/     - edit post (author only)
 - /posts/<pk>/delete/   - delete post (author only)
+
+Comments:
+- /posts/<post_id>/comments/new/           - create comment (authenticated)
+- /posts/<post_id>/comments/<comment_pk>/edit/   - edit comment (author only)
+- /posts/<post_id>/comments/<comment_pk>/delete/  - delete comment (author only)
 """
 from django.urls import path
 
@@ -37,4 +42,8 @@ urlpatterns = [
     path("post/<int:pk>/update/", views.PostUpdateView.as_view(), name="post_update_alt"),
     path("posts/<int:pk>/delete/", views.PostDeleteView.as_view(), name="post_delete"),
     path("post/<int:pk>/delete/", views.PostDeleteView.as_view(), name="post_delete_alt"),
+    # Comments
+    path("posts/<int:post_id>/comments/new/", views.CommentCreateView.as_view(), name="comment_create"),
+    path("posts/<int:post_id>/comments/<int:comment_pk>/edit/", views.CommentUpdateView.as_view(), name="comment_update"),
+    path("posts/<int:post_id>/comments/<int:comment_pk>/delete/", views.CommentDeleteView.as_view(), name="comment_delete"),
 ]

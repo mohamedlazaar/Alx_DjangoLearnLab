@@ -5,7 +5,19 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Post, UserProfile
+from .models import Comment, Post, UserProfile
+
+
+class CommentForm(forms.ModelForm):
+    """ModelForm for creating and updating comments. Author is set in the view."""
+
+    class Meta:
+        model = Comment
+        fields = ("content",)
+        widgets = {
+            "content": forms.Textarea(attrs={"rows": 3, "placeholder": "Write a comment..."}),
+        }
+        labels = {"content": ""}
 
 
 class PostForm(forms.ModelForm):
