@@ -123,6 +123,10 @@ STATIC_URL = 'static/'
 # Add project-level static dirs here if needed:
 # STATICFILES_DIRS = [BASE_DIR / 'static']
 
-LOGIN_REDIRECT_URL = 'home'  # Redirect to posts list after login
-LOGOUT_REDIRECT_URL = 'login'
-LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = "blog:home"
+LOGOUT_REDIRECT_URL = "blog:logged_out"
+LOGIN_URL = "blog:login"
+
+# Media files (user uploads, e.g. profile pictures)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"

@@ -10,7 +10,14 @@
 <body>
     <header>
         <nav>
-            <a href="/">Home</a>
+            <a href="{% url 'blog:home' %}">Home</a>
+            {% if user.is_authenticated %}
+              <a href="{% url 'blog:profile' %}">Profile</a>
+              <a href="{% url 'blog:logout' %}">Logout</a>
+            {% else %}
+              <a href="{% url 'blog:login' %}">Login</a>
+              <a href="{% url 'blog:register' %}">Register</a>
+            {% endif %}
         </nav>
     </header>
     <main>

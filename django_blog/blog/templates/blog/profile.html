@@ -1,0 +1,20 @@
+{% extends "blog/base.html" %}
+{% block title %}Profile - Django Blog{% endblock %}
+{% block content %}
+<h1>Your Profile</h1>
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+    <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% if profile.avatar %}
+  <p class="profile-avatar"><img src="{{ profile.avatar.url }}" alt="Avatar" width="100" height="100"></p>
+{% endif %}
+<form method="post" action="{% url 'blog:profile' %}" enctype="multipart/form-data" class="auth-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Update Profile</button>
+</form>
+{% endblock %}
