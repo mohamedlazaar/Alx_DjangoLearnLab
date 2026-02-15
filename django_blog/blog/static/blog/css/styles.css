@@ -106,3 +106,26 @@ header nav a + a {
 .post-list .meta { color: #666; font-size: 0.9rem; margin: 0.25rem 0; }
 .profile-avatar { margin-bottom: 1rem; }
 .profile-avatar img { border-radius: 8px; }
+
+/* Post CRUD */
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #2c3e50;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.btn:hover { background: #1a252f; color: #fff; }
+.btn-danger { background: #c0392b; }
+.btn-danger:hover { background: #a93226; }
+.btn-link { margin-left: 1rem; color: #2c3e50; }
+.post-form textarea { max-width: 100%; min-height: 200px; }
+.post-actions { margin-top: 1.5rem; }
+.post-actions .btn { margin-right: 0.5rem; }
+.post-detail .post-content { margin: 1rem 0; }
+.pagination { margin-top: 1.5rem; }
+.pagination a { margin: 0 0.5rem; }

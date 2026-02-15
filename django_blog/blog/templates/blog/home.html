@@ -6,13 +6,19 @@
   <ul class="post-list">
     {% for post in posts %}
     <li>
-      <h2>{{ post.title }}</h2>
+      <h2><a href="{% url 'blog:post_detail' post.pk %}">{{ post.title }}</a></h2>
       <p class="meta">By {{ post.author.username }} on {{ post.published_date|date:"F j, Y" }}</p>
       <p>{{ post.content|truncatewords:30 }}</p>
     </li>
     {% endfor %}
   </ul>
+  <p><a href="{% url 'blog:post_list' %}">View all posts &rarr;</a></p>
 {% else %}
   <p>No posts yet.</p>
+  {% if user.is_authenticated %}
+    <p><a href="{% url 'blog:post_create' %}">Create the first post</a></p>
+  {% else %}
+    <p><a href="{% url 'blog:post_list' %}">Browse posts</a></p>
+  {% endif %}
 {% endif %}
 {% endblock %}

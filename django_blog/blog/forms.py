@@ -1,11 +1,26 @@
 """
-Authentication and profile forms.
+Authentication, profile, and blog post forms.
 """
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import UserProfile
+from .models import Post, UserProfile
+
+
+class PostForm(forms.ModelForm):
+    """
+    ModelForm for creating and updating blog posts.
+    Fields: title, content. Author is set in the view from request.user.
+    """
+
+    class Meta:
+        model = Post
+        fields = ("title", "content")
+        widgets = {
+            "title": forms.TextInput(attrs={"placeholder": "Post title"}),
+            "content": forms.Textarea(attrs={"rows": 12, "placeholder": "Write your post content here..."}),
+        }
 
 
 class CustomUserCreationForm(UserCreationForm):
