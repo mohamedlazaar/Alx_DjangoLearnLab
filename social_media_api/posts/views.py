@@ -4,14 +4,14 @@ Only the author can edit or delete their own posts and comments.
 """
 from rest_framework import permissions
 from rest_framework.filters import SearchFilter
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import viewsets
 
 from .models import Comment, Post
 from .permissions import IsOwnerOrReadOnly
 from .serializers import CommentSerializer, PostListSerializer, PostSerializer
 
 
-class PostViewSet(ModelViewSet):
+class PostViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Post: list, create, retrieve, update, destroy.
     List is searchable by title and content. Only the author can update/delete.
@@ -31,7 +31,7 @@ class PostViewSet(ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class CommentViewSet(ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Comment: list, create, retrieve, update, destroy.
     Filter by post via query param ?post=<id>. Only the author can update/delete.
