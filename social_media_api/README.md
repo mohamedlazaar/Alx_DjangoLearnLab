@@ -56,8 +56,9 @@ The API uses a **custom user model** (`accounts.User`) that extends Django’s `
 | `bio`             | text       | Optional biography / about section               |
 | `profile_picture` | image      | Optional; uploaded to `profile_pictures/`       |
 | `followers`       | M2M (self) | Users who follow this user (`symmetrical=False`) |
+| **following**     | (reverse)  | Users this user follows (`user.following`)       |
 
-Related name `following` is used for the reverse relation (users this user follows). Helper methods on the model include `follower_count()`, `following_count()`, `is_following(user)`, `follow(user)`, and `unfollow(user)`.
+The **following** relationship is the reverse of `followers`: use `user.following` to get users that this user follows. Helper methods: `follower_count()`, `following_count()`, `is_following(user)`, `follow(user)`, `unfollow(user)`.
 
 ---
 
@@ -159,6 +160,49 @@ curl -X PATCH http://127.0.0.1:8000/api/accounts/profile/ \
   -d '{"bio":"Hello, I am Jane."}'
 ```
 
+### 4. Follow and unfollow users
+
+The user model has a **following** relationship (reverse of `followers`): `user.following` returns users that the current user follows. Only the authenticated user can change their own following list.
+
+**Follow a user:** `POST /api/accounts/follow/<user_id>/`
+
+**Headers:** `Authorization: Token <your-token>`
+
+**Example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/accounts/follow/2/ \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Success response (200):**
+
+```json
+{
+  "detail": "You are now following otheruser."
+}
+```
+
+**Unfollow a user:** `POST /api/accounts/unfollow/<user_id>/`
+
+**Example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/accounts/unfollow/2/ \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Success response (200):**
+
+```json
+{
+  "detail": "You have unfollowed otheruser."
+}
+```
+
+- You cannot follow yourself (400 with message).
+- Following or unfollowing a non-existent user returns 404.
+
 ---
 
 ## Testing with Postman
@@ -166,12 +210,51 @@ curl -X PATCH http://127.0.0.1:8000/api/accounts/profile/ \
 1. **Register:** Create a request to `POST {{base}}/api/accounts/register/` with a JSON body (`username`, `password`, optional `email`). Check that the response contains `token` and `user`.
 2. **Login:** `POST {{base}}/api/accounts/login/` with `username` and `password`. Confirm you receive the same `token` and `user` format.
 3. **Profile:** For `GET` and `PATCH` to `/api/accounts/profile/`, add header `Authorization` with value `Token <paste-token-here>`. Verify you can read and update the authenticated user’s profile.
+4. **Follow/Unfollow:** `POST {{base}}/api/accounts/follow/<user_id>/` and `POST {{base}}/api/accounts/unfollow/<user_id>/` with auth header. Confirm 200 and message; try following yourself (400).
+5. **Feed:** `GET {{base}}/api/feed/` with auth header. Confirm paginated list of posts from followed users only; with no follows, `results` is empty.
 
 ---
 
 ## Posts and Comments API
 
 Base URL for posts and comments: `http://127.0.0.1:8000/api/`
+
+### Feed
+
+**Endpoint:** `GET /api/feed/`
+
+Returns a **paginated** list of posts from users that the **current user follows**, ordered by **created_at descending** (most recent first). Requires authentication.
+
+**Headers:** `Authorization: Token <your-token>`
+
+**Example:**
+
+```bash
+curl -X GET http://127.0.0.1:8000/api/feed/ \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Response (200):** Same paginated format as post list, e.g.:
+
+```json
+{
+  "count": 5,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 3,
+      "author": "otheruser",
+      "title": "Their post",
+      "content": "...",
+      "created_at": "2026-02-21T14:00:00Z",
+      "updated_at": "2026-02-21T14:00:00Z"
+    }
+  ]
+}
+```
+
+If the user follows no one, `results` is an empty list.
 
 ### Authentication
 
@@ -317,5 +400,6 @@ curl "http://127.0.0.1:8000/api/comments/?post=1"
 - `social_media_api/` – Django project (settings, root URLs).
 - `accounts/` – App for user model, registration, login, and profile (serializers, views, URLs).
 - `posts/` – App for Post and Comment models, ViewSets, serializers, permissions, and router URLs.
-- Account API: `/api/accounts/` (register, login, profile).
+- Account API: `/api/accounts/` (register, login, profile, follow, unfollow).
+- Feed: `/api/feed/` (posts from followed users, auth required).
 - Posts and comments API: `/api/posts/`, `/api/comments/` (with pagination and search/filter).

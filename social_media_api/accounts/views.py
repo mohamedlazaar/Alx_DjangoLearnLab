@@ -1,9 +1,11 @@
-from django.shortcuts import render
 from django.contrib.auth import get_user_model
-from rest_framework import status, generics, permissions
-from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, permissions, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
@@ -38,9 +40,40 @@ class CustomObtainAuthToken(ObtainAuthToken):
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):
-	"""Retrieve or update the authenticated user's profile."""
-	serializer_class = UserSerializer
-	permission_classes = [permissions.IsAuthenticated]
+    """Retrieve or update the authenticated user's profile."""
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-	def get_object(self):
-		return self.request.user
+    def get_object(self):
+        return self.request.user
+
+
+class FollowUserView(APIView):
+    """Follow another user. Authenticated user can only modify their own following list."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, user_id):
+        target = get_object_or_404(User, pk=user_id)
+        if target == request.user:
+            return Response(
+                {"detail": "You cannot follow yourself."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        request.user.follow(target)
+        return Response(
+            {"detail": f"You are now following {target.username}."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class UnfollowUserView(APIView):
+    """Unfollow another user. Authenticated user can only modify their own following list."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, user_id):
+        target = get_object_or_404(User, pk=user_id)
+        request.user.unfollow(target)
+        return Response(
+            {"detail": f"You have unfollowed {target.username}."},
+            status=status.HTTP_200_OK,
+        )

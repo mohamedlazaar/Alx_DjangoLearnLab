@@ -1,17 +1,35 @@
 """
 ViewSets for Post and Comment with CRUD, pagination, and search.
-Only the author can edit or delete their own posts and comments.
+Feed of posts from followed users. Only the author can edit or delete their own posts and comments.
 """
 from rest_framework import permissions
 from rest_framework.filters import SearchFilter
-from rest_framework import viewsets
+from rest_framework.generics import ListAPIView
+from rest_framework.viewsets import ModelViewSet
 
 from .models import Comment, Post
 from .permissions import IsOwnerOrReadOnly
 from .serializers import CommentSerializer, PostListSerializer, PostSerializer
 
 
-class PostViewSet(viewsets.ModelViewSet):
+class FeedView(ListAPIView):
+    """
+    Feed of posts from users that the current user follows.
+    Ordered by created_at descending (most recent first). Paginated. Requires authentication.
+    """
+    serializer_class = PostListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        following_ids = self.request.user.following.values_list("pk", flat=True)
+        return (
+            Post.objects.filter(author_id__in=following_ids)
+            .select_related("author")
+            .order_by("-created_at")
+        )
+
+
+class PostViewSet(ModelViewSet):
     """
     ViewSet for Post: list, create, retrieve, update, destroy.
     List is searchable by title and content. Only the author can update/delete.
@@ -31,7 +49,7 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ModelViewSet):
     """
     ViewSet for Comment: list, create, retrieve, update, destroy.
     Filter by post via query param ?post=<id>. Only the author can update/delete.

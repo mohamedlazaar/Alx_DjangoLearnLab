@@ -1,5 +1,6 @@
 """
-URL routing for posts and comments using DRF routers.
+URL routing for posts, comments, and feed.
+- /feed/           list posts from followed users (auth required)
 - /posts/          list, create
 - /posts/<id>/     retrieve, update, destroy
 - /comments/       list (optional ?post=<id>), create
@@ -8,12 +9,13 @@ URL routing for posts and comments using DRF routers.
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import CommentViewSet, PostViewSet
+from .views import CommentViewSet, FeedView, PostViewSet
 
 router = DefaultRouter()
 router.register(r"posts", PostViewSet, basename="post")
 router.register(r"comments", CommentViewSet, basename="comment")
 
 urlpatterns = [
+    path("feed/", FeedView.as_view(), name="feed"),
     path("", include(router.urls)),
 ]

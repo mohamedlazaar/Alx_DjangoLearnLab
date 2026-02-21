@@ -4,11 +4,12 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     """
     Custom user model extending Django's AbstractUser.
-    
+
     Adds social media specific fields:
     - bio: A text field for user biography
     - profile_picture: Image field for user's profile picture
-    - followers: ManyToMany self-referential field for following relationships
+    - followers: ManyToMany to self (users who follow this user)
+    - following: Reverse relation (users this user follows); use user.following to access
     """
     bio = models.TextField(
         blank=True,
