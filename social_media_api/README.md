@@ -169,8 +169,153 @@ curl -X PATCH http://127.0.0.1:8000/api/accounts/profile/ \
 
 ---
 
+## Posts and Comments API
+
+Base URL for posts and comments: `http://127.0.0.1:8000/api/`
+
+### Authentication
+
+- **List** (GET) posts and comments: no authentication required.
+- **Create** (POST): requires `Authorization: Token <token>`.
+- **Update/Delete** (PUT, PATCH, DELETE): requires authentication and **only the author** of the post or comment can modify or delete it.
+
+### Pagination
+
+List endpoints return paginated results (10 items per page by default). Use query parameters:
+
+- `?page=2` – next page
+- `?page_size=10` – (if supported) page size
+
+Response format:
+
+```json
+{
+  "count": 50,
+  "next": "http://127.0.0.1:8000/api/posts/?page=2",
+  "previous": null,
+  "results": [ ... ]
+}
+```
+
+### Posts
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/posts/` | List all posts (paginated). **Search:** `?search=<query>` matches title and content. |
+| POST | `/api/posts/` | Create a post (auth required). Author is set to the current user. |
+| GET | `/api/posts/<id>/` | Retrieve a single post (includes nested comments). |
+| PUT/PATCH | `/api/posts/<id>/` | Update a post (author only). |
+| DELETE | `/api/posts/<id>/` | Delete a post (author only). |
+
+**Create post – request body (JSON):**
+
+```json
+{
+  "title": "My first post",
+  "content": "Hello, world!"
+}
+```
+
+**Create post – example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/posts/ \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"My first post","content":"Hello, world!"}'
+```
+
+**Search posts – example:**
+
+```bash
+curl "http://127.0.0.1:8000/api/posts/?search=hello"
+```
+
+**Retrieve post – response (200):**
+
+```json
+{
+  "id": 1,
+  "author": "jane",
+  "title": "My first post",
+  "content": "Hello, world!",
+  "created_at": "2026-02-21T12:00:00Z",
+  "updated_at": "2026-02-21T12:00:00Z",
+  "comments": [
+    {
+      "id": 1,
+      "post": 1,
+      "author": "john",
+      "content": "Nice post!",
+      "created_at": "2026-02-21T12:05:00Z",
+      "updated_at": "2026-02-21T12:05:00Z"
+    }
+  ]
+}
+```
+
+### Comments
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/comments/` | List all comments (paginated). **Filter:** `?post=<post_id>` to list comments for a post. |
+| POST | `/api/comments/` | Create a comment (auth required). Author is set to the current user. |
+| GET | `/api/comments/<id>/` | Retrieve a single comment. |
+| PUT/PATCH | `/api/comments/<id>/` | Update a comment (author only). |
+| DELETE | `/api/comments/<id>/` | Delete a comment (author only). |
+
+**Create comment – request body (JSON):**
+
+```json
+{
+  "post": 1,
+  "content": "Great post!"
+}
+```
+
+**Create comment – example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/comments/ \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"post":1,"content":"Great post!"}'
+```
+
+**List comments for a post – example:**
+
+```bash
+curl "http://127.0.0.1:8000/api/comments/?post=1"
+```
+
+**Retrieve comment – response (200):**
+
+```json
+{
+  "id": 1,
+  "post": 1,
+  "author": "john",
+  "content": "Great post!",
+  "created_at": "2026-02-21T12:05:00Z",
+  "updated_at": "2026-02-21T12:05:00Z"
+}
+```
+
+### Testing posts and comments (Postman)
+
+1. **List posts:** GET `/api/posts/` – no auth. Check pagination and try `?search=keyword`.
+2. **Create post:** POST `/api/posts/` with header `Authorization: Token <token>` and body `{"title":"Test","content":"Body"}`. Expect 201 and post in response.
+3. **Update/delete post:** As the post author, PATCH/DELETE `/api/posts/<id>/`. As another user, expect 403.
+4. **List comments:** GET `/api/comments/` and GET `/api/comments/?post=1`. Check pagination.
+5. **Create comment:** POST `/api/comments/` with `{"post": 1, "content": "Comment text"}` and auth header. Expect 201.
+6. **Update/delete comment:** As the comment author, PATCH/DELETE `/api/comments/<id>/`. As another user, expect 403.
+
+---
+
 ## Project structure
 
 - `social_media_api/` – Django project (settings, root URLs).
 - `accounts/` – App for user model, registration, login, and profile (serializers, views, URLs).
-- Account API routes are mounted at `/api/accounts/` (register, login, profile).
+- `posts/` – App for Post and Comment models, ViewSets, serializers, permissions, and router URLs.
+- Account API: `/api/accounts/` (register, login, profile).
+- Posts and comments API: `/api/posts/`, `/api/comments/` (with pagination and search/filter).
