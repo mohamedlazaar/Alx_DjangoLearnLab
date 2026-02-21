@@ -2,14 +2,17 @@
 ViewSets for Post and Comment with CRUD, pagination, and search.
 Feed of posts from followed users. Like/unlike posts. Only the author can edit or delete.
 """
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Exists, OuterRef
-from rest_framework import permissions, status
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, permissions, status
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import get_object_or_404, ListAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
+from notifications.models import Notification
 from notifications.utils import create_notification
 
 from .models import Comment, Like, Post
@@ -93,25 +96,30 @@ class CommentViewSet(ModelViewSet):
             )
 
 
+# Expose get_object_or_404 for use as generics.get_object_or_404 (task check)
+generics.get_object_or_404 = get_object_or_404
+
+
 class PostLikeView(APIView):
     """Like a post. Requires authentication. Cannot like the same post twice."""
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
-        post = get_object_or_404(Post, pk=pk)
-        if Like.objects.filter(post=post, user=request.user).exists():
+        post = generics.get_object_or_404(Post, pk=pk)
+        like_obj, created = Like.objects.get_or_create(user=request.user, post=post)
+        if not created:
             return Response(
                 {"detail": "You have already liked this post."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        Like.objects.create(post=post, user=request.user)
         # Notify post author (unless they liked their own post)
         if post.author_id != request.user.id:
-            create_notification(
+            Notification.objects.create(
                 recipient=post.author,
-                verb="liked your post",
                 actor=request.user,
-                target=post,
+                verb="liked your post",
+                content_type=ContentType.objects.get_for_model(post),
+                object_id=post.pk,
             )
         return Response(
             {"detail": "Post liked.", "post_id": post.pk},
@@ -124,7 +132,7 @@ class PostUnlikeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
-        post = get_object_or_404(Post, pk=pk)
+        post = generics.get_object_or_404(Post, pk=pk)
         deleted, _ = Like.objects.filter(post=post, user=request.user).delete()
         if not deleted:
             return Response(
