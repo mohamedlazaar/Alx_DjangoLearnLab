@@ -5,6 +5,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 
+from notifications.utils import create_notification
+
 from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
@@ -64,6 +66,11 @@ class FollowUserView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         request.user.follow(target)
+        create_notification(
+            recipient=target,
+            verb="followed you",
+            actor=request.user,
+        )
         return Response(
             {"detail": f"You are now following {target.username}."},
             status=status.HTTP_200_OK,

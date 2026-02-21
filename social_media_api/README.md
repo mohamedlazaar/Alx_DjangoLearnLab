@@ -314,7 +314,7 @@ curl -X POST http://127.0.0.1:8000/api/posts/ \
 curl "http://127.0.0.1:8000/api/posts/?search=hello"
 ```
 
-**Retrieve post – response (200):**
+**Retrieve post – response (200):** Post responses also include `like_count` and `liked_by_user` (whether the current user has liked the post).
 
 ```json
 {
@@ -324,6 +324,8 @@ curl "http://127.0.0.1:8000/api/posts/?search=hello"
   "content": "Hello, world!",
   "created_at": "2026-02-21T12:00:00Z",
   "updated_at": "2026-02-21T12:00:00Z",
+  "like_count": 2,
+  "liked_by_user": false,
   "comments": [
     {
       "id": 1,
@@ -334,6 +336,55 @@ curl "http://127.0.0.1:8000/api/posts/?search=hello"
       "updated_at": "2026-02-21T12:05:00Z"
     }
   ]
+}
+```
+
+### Likes
+
+Users can like and unlike posts. Each user can like a post only once. Liking a post creates a notification for the post author (unless they like their own post).
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/posts/<id>/like/` | Like a post (auth required). Returns 400 if already liked. |
+| POST | `/api/posts/<id>/unlike/` | Remove your like (auth required). Returns 400 if not liked. |
+
+**Like a post – example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/posts/1/like/ \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Success response (201):**
+
+```json
+{
+  "detail": "Post liked.",
+  "post_id": 1
+}
+```
+
+**Already liked (400):**
+
+```json
+{
+  "detail": "You have already liked this post."
+}
+```
+
+**Unlike a post – example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/posts/1/unlike/ \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Success response (200):**
+
+```json
+{
+  "detail": "Post unliked.",
+  "post_id": 1
 }
 ```
 
@@ -392,14 +443,121 @@ curl "http://127.0.0.1:8000/api/comments/?post=1"
 4. **List comments:** GET `/api/comments/` and GET `/api/comments/?post=1`. Check pagination.
 5. **Create comment:** POST `/api/comments/` with `{"post": 1, "content": "Comment text"}` and auth header. Expect 201.
 6. **Update/delete comment:** As the comment author, PATCH/DELETE `/api/comments/<id>/`. As another user, expect 403.
+7. **Like/unlike:** POST `/api/posts/<id>/like/` and POST `/api/posts/<id>/unlike/` with auth. Expect 201/200; like again returns 400.
+8. **Notifications:** GET `/api/notifications/` with auth. Use `?unread_only=1` to show only unread. POST `/api/notifications/<id>/read/` or POST `/api/notifications/read-all/` to mark as read.
+
+---
+
+## Notifications
+
+Base URL: `http://127.0.0.1:8000/api/notifications/`
+
+Users receive notifications for:
+
+- **New follower** – when someone follows them
+- **Like on post** – when someone likes one of their posts (not when they like their own)
+- **Comment on post** – when someone comments on one of their posts (not when they comment on their own)
+
+All notification endpoints require authentication: `Authorization: Token <your-token>`.
+
+### List notifications
+
+**Endpoint:** `GET /api/notifications/`
+
+Returns a **paginated** list of notifications for the current user, newest first.
+
+**Query parameters:**
+
+- `unread_only=1` – return only unread notifications (useful to highlight unread in the UI)
+
+**Example:**
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/notifications/" \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Example (unread only):**
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/notifications/?unread_only=1" \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Response (200):**
+
+```json
+{
+  "count": 5,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "recipient": 1,
+      "actor": 2,
+      "actor_username": "john",
+      "verb": "liked your post",
+      "timestamp": "2026-02-21T15:00:00Z",
+      "is_read": false,
+      "read_at": null
+    }
+  ]
+}
+```
+
+### Mark notification as read
+
+**Endpoint:** `POST /api/notifications/<id>/read/`
+
+Marks a single notification as read. Only the recipient can mark it. Returns 404 if the notification does not exist or does not belong to the current user.
+
+**Example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/notifications/1/read/ \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Success response (200):**
+
+```json
+{
+  "detail": "Notification marked as read."
+}
+```
+
+### Mark all notifications as read
+
+**Endpoint:** `POST /api/notifications/read-all/`
+
+Marks all of the current user’s unread notifications as read.
+
+**Example:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/notifications/read-all/ \
+  -H "Authorization: Token YOUR_TOKEN"
+```
+
+**Success response (200):**
+
+```json
+{
+  "detail": "Marked 3 notification(s) as read."
+}
+```
 
 ---
 
 ## Project structure
 
 - `social_media_api/` – Django project (settings, root URLs).
-- `accounts/` – App for user model, registration, login, and profile (serializers, views, URLs).
-- `posts/` – App for Post and Comment models, ViewSets, serializers, permissions, and router URLs.
+- `accounts/` – App for user model, registration, login, profile, follow/unfollow (serializers, views, URLs). Following a user creates a notification for the followed user.
+- `posts/` – App for Post, Comment, and Like models; ViewSets for posts and comments; like/unlike views; serializers, permissions, and router URLs. Liking a post creates a notification for the post author; commenting creates a notification for the post author.
+- `notifications/` – App for Notification model (recipient, actor, verb, target, timestamp, is_read). List and mark-as-read endpoints.
 - Account API: `/api/accounts/` (register, login, profile, follow, unfollow).
 - Feed: `/api/feed/` (posts from followed users, auth required).
-- Posts and comments API: `/api/posts/`, `/api/comments/` (with pagination and search/filter).
+- Posts and comments API: `/api/posts/`, `/api/comments/` (with pagination, search, like count, and liked-by-user).
+- Likes: `/api/posts/<id>/like/`, `/api/posts/<id>/unlike/`.
+- Notifications API: `/api/notifications/` (list, optional `?unread_only=1`), `/api/notifications/<id>/read/`, `/api/notifications/read-all/`.
