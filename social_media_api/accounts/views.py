@@ -4,11 +4,11 @@ from rest_framework import generics, permissions, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
+CustomUser = get_user_model()
 
 
 class RegisterView(generics.CreateAPIView):
@@ -48,12 +48,16 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-class FollowUserView(APIView):
+class FollowUserView(generics.GenericAPIView):
     """Follow another user. Authenticated user can only modify their own following list."""
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, user_id):
-        target = get_object_or_404(User, pk=user_id)
+    def get_queryset(self):
+        return CustomUser.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        user_id = kwargs.get("user_id")
+        target = get_object_or_404(CustomUser, pk=user_id)
         if target == request.user:
             return Response(
                 {"detail": "You cannot follow yourself."},
@@ -66,12 +70,16 @@ class FollowUserView(APIView):
         )
 
 
-class UnfollowUserView(APIView):
+class UnfollowUserView(generics.GenericAPIView):
     """Unfollow another user. Authenticated user can only modify their own following list."""
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, user_id):
-        target = get_object_or_404(User, pk=user_id)
+    def get_queryset(self):
+        return CustomUser.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        user_id = kwargs.get("user_id")
+        target = get_object_or_404(CustomUser, pk=user_id)
         request.user.unfollow(target)
         return Response(
             {"detail": f"You have unfollowed {target.username}."},
