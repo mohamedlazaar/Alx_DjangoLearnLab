@@ -20,10 +20,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    follower_count = serializers.IntegerField(source='follower_count', read_only=True)
-    following_count = serializers.IntegerField(source='following_count', read_only=True)
+    follower_count = serializers.SerializerMethodField(read_only=True)
+    following_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
         fields = ("id", "username", "email", "first_name", "last_name", "bio", "profile_picture", "follower_count", "following_count")
         read_only_fields = ("id", "follower_count", "following_count")
+
+    def get_follower_count(self, obj):
+        return obj.follower_count()
+
+    def get_following_count(self, obj):
+        return obj.following_count()
