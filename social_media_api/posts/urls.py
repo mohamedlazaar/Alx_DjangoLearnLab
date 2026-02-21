@@ -1,5 +1,6 @@
 """
 URL routing for posts, comments, and feed.
+Feed endpoint: /feed/
 - /feed/           list posts from followed users (auth required)
 - /posts/          list, create
 - /posts/<id>/     retrieve, update, destroy

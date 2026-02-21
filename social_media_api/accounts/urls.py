@@ -1,3 +1,6 @@
+"""
+Follow management: /follow/<int:user_id>/ and /unfollow/<int:user_id>/
+"""
 from django.urls import path
 
 from .views import CustomObtainAuthToken, FollowUserView, ProfileView, RegisterView, UnfollowUserView
