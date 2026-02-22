@@ -40,6 +40,10 @@ python manage.py runserver
 
 The API will be available at `http://127.0.0.1:8000/`. Account endpoints are under `http://127.0.0.1:8000/api/accounts/`.
 
+### 5. Production deployment
+
+For deploying to a production server (Heroku, Render, Railway, DigitalOcean, or a VPS), see **[DEPLOYMENT.md](DEPLOYMENT.md)**. It covers production settings, environment variables, Gunicorn/Whitenoise, database configuration, and platform-specific steps.
+
 ---
 
 ## User model overview
