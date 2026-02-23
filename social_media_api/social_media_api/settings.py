@@ -94,6 +94,11 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+# Ensure PORT is set for production PostgreSQL (default 5432)
+if DATABASES["default"] and DATABASES["default"].get("ENGINE", "").startswith(
+    "django.db.backends.postgresql"
+):
+    DATABASES["default"].setdefault("PORT", os.environ.get("DB_PORT", "5432"))
 
 
 # Password validation
